@@ -603,6 +603,9 @@ int main()
 			if (g.player_lives >= 0) {
 				g.Update();
 				g.Draw(sc);
+				if (g.boss.total_health <= 0) {
+					current_scene = Scene::VICTORY;
+				}
 			}
 			else {
 				current_scene = Scene::GAME_OVER;
@@ -625,7 +628,7 @@ int main()
 			sc.ClearScreen();
 			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
 
-			sc.DrawText("You have successfully terrorized the space", 16, 16, 0xbf);
+			sc.DrawText("You have successfully domestically terrorized space", 16, 16, 0xbf);
 
 			sc.DrawText("Press C to try again", 16, 32, 0xbf);
 
