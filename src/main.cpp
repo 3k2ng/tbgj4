@@ -15,6 +15,14 @@ constexpr float FONT_SIZE = 8;
 
 constexpr int FRAME_PER_SECOND = 60;
 
+enum class Scene
+{
+	START_SCENE,
+	MAIN_GAME,
+	GAME_OVER,
+	VICTORY
+};
+
 struct Group {
 	int width, offset_x, offset_y;
 	std::vector<unsigned char> codepoints;
@@ -533,15 +541,59 @@ struct GameManager {
 
 int main()
 {
+	Scene current_scene = Scene::START_SCENE;
 	Screen sc("u tell me a Tung text-based this game jam");
 	GameManager g;
 	SetTargetFPS(FRAME_PER_SECOND);
 	while (!WindowShouldClose())
 	{
-		sc.ClearScreen();
-		if (g.player_lives >= 0) {
-			g.Update();
-			g.Draw(sc);
+		switch (current_scene) {
+		case Scene::START_SCENE:
+			sc.ClearScreen();
+			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
+			sc.DrawText("An entry for GDC 4th text-based game jam", 1, 1, 0xbf);
+			sc.DrawText(
+"  _____                            _   _\n\
+ |  __ \\                          | | (_)\n\
+ | |  | | ___  _ __ ___   ___  ___| |_ _  ___\n\
+ | |  | |/ _ \\| '_ ` _ \\ / _ \\/ __| __| |/ __|\n\
+ | |__| | (_) | | | | | |  __/\\__ \\ |_| | (__ \n\
+ |_____/ \\___/|_| |_| |_|\\___||___/\\__|_|\\___|\n\
+ | |                         (_)              \n\
+ | |_ ___ _ __ _ __ ___  _ __ _ ___ _ __ ___  \n\
+ | __/ _ \\ '__| '__/ _ \\| '__| / __| '_ ` _ \\ \n\
+ | ||  __/ |  | | | (_) | |  | \__ \ | | | | | |\n\
+  \\__\\___|_|  |_|  \\___/|_|  |_|___/_| |_| |_|", 16, 16, 0xbf);
+			sc.DrawText("Made in raylib", 1, HEIGHT - 2, 0xbf);
+			if (IsKeyPressed(KEY_C)) {
+				current_scene = Scene::MAIN_GAME;
+			}
+			break;
+		case Scene::MAIN_GAME:
+			sc.ClearScreen();
+			if (g.player_lives >= 0) {
+				g.Update();
+				g.Draw(sc);
+			}
+			else {
+				current_scene = Scene::GAME_OVER;
+			}
+			break;
+		case Scene::GAME_OVER:
+			sc.ClearScreen();
+			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
+			if (IsKeyPressed(KEY_C)) {
+				g = GameManager();
+				current_scene = Scene::MAIN_GAME;
+			}
+			break;
+		case Scene::VICTORY:
+			sc.ClearScreen();
+			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
+			if (IsKeyPressed(KEY_C)) {
+				current_scene = Scene::MAIN_GAME;
+			}
+			break;
 		}
 
 		BeginDrawing();
