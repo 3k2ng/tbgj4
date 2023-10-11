@@ -264,6 +264,7 @@ struct Boss {
 	float pos_x, pos_y, vel_x, vel_y, acc_x, acc_y;
 
 	int total_health = TOTAL_HEALTH, body_cover_health = BODY_COVER_HEALTH, left_wing_health = WING_HEALTH, right_wing_health = WING_HEALTH;
+	int flash_body_base_cd = 0, flash_body_cover_cd = 0, flash_left_wing_base_cd = 0, flash_left_wing_cover_cd = 0, flash_right_wing_base_cd = 0, flash_right_wing_cover_cd = 0;
 
 	enum class State
 	{
@@ -337,6 +338,12 @@ struct Boss {
 		--wing_shot_cd;
 		--body_cover_shot_cd;
 		--final_state_shot_cd;
+		--flash_body_base_cd;
+		--flash_body_cover_cd;
+		--flash_left_wing_base_cd;
+		--flash_left_wing_cover_cd;
+		--flash_right_wing_base_cd;
+		--flash_right_wing_cover_cd;
 	}
 
 	std::vector<Bullet> Shoot(int player_x, int player_y) const {
@@ -396,6 +403,10 @@ struct Boss {
 
 		if (left_wing_health > 0 && rel_x >= 0 && rel_x < 16 && rel_y >= 1 && rel_y < 7) {
 			--left_wing_health;
+			if (left_wing_health > WING_HEALTH - WING_COVER_HEALTH)
+				flash_left_wing_cover_cd = 2;
+			else
+				flash_left_wing_base_cd = 2;
 			if (left_wing_health <= 0) {
 				total_health -= WING_HEALTH;
 			}
@@ -404,6 +415,10 @@ struct Boss {
 
 		if (right_wing_health > 0 && rel_x >= 30 && rel_x < 46 && rel_y >= 1 && rel_y < 7) {
 			--right_wing_health;
+			if (right_wing_health > WING_HEALTH - WING_COVER_HEALTH)
+				flash_right_wing_cover_cd = 2;
+			else
+				flash_right_wing_base_cd = 2;
 			if (right_wing_health <= 0) {
 				total_health -= WING_HEALTH;
 			}
@@ -412,6 +427,7 @@ struct Boss {
 
 		if (body_cover_health > 0 && rel_x >= 19 && rel_x < 27 && rel_y >= 8 && rel_y < 14) {
 			--body_cover_health;
+			flash_body_cover_cd = 2;
 			if (body_cover_health <= 0) {
 				total_health -= BODY_COVER_HEALTH;
 			}
@@ -419,27 +435,28 @@ struct Boss {
 		}
 		if (total_health > 0 && rel_x >= 19 && rel_x < 27 && rel_y >= 0 && rel_y < 8) {
 			--total_health;
+			flash_body_base_cd = 2;
 			return true;
 		}
 		return false;
 	}
 
 	void Draw(Screen& sc) {
-		sc.DrawGroup(pos_x + 16, pos_y, BOSS_BODY_BASE);
+		sc.DrawGroup(pos_x + 16, pos_y, BOSS_BODY_BASE, flash_body_base_cd > 0);
 		if (left_wing_health > 0) {
-			sc.DrawGroup(static_cast<int>(pos_x), static_cast<int>(pos_y), BOSS_WING_BASE);
+			sc.DrawGroup(static_cast<int>(pos_x), static_cast<int>(pos_y), BOSS_WING_BASE, flash_left_wing_base_cd > 0);
 		}
 		if (left_wing_health > WING_HEALTH - WING_COVER_HEALTH) {
-			sc.DrawGroup(static_cast<int>(pos_x), static_cast<int>(pos_y), BOSS_WING_COVER);
+			sc.DrawGroup(static_cast<int>(pos_x), static_cast<int>(pos_y), BOSS_WING_COVER, flash_left_wing_cover_cd > 0);
 		}
 		if (right_wing_health > 0) {
-			sc.DrawGroup(static_cast<int>(pos_x) + 30, static_cast<int>(pos_y), BOSS_WING_BASE);
+			sc.DrawGroup(static_cast<int>(pos_x) + 30, static_cast<int>(pos_y), BOSS_WING_BASE, flash_right_wing_base_cd > 0);
 		}
 		if (right_wing_health > WING_HEALTH - WING_COVER_HEALTH) {
-			sc.DrawGroup(static_cast<int>(pos_x) + 30, static_cast<int>(pos_y), BOSS_WING_COVER);
+			sc.DrawGroup(static_cast<int>(pos_x) + 30, static_cast<int>(pos_y), BOSS_WING_COVER, flash_right_wing_cover_cd > 0);
 		}
 		if (body_cover_health > 0) {
-			sc.DrawGroup(static_cast<int>(pos_x) + 16, static_cast<int>(pos_y), BOSS_BODY_COVER);
+			sc.DrawGroup(static_cast<int>(pos_x) + 16, static_cast<int>(pos_y), BOSS_BODY_COVER, flash_body_cover_cd > 0);
 		}
 	}
 };
@@ -525,14 +542,14 @@ struct GameManager {
 
 	void Draw(Screen& sc) {
 		sc.DrawGroup(player_x, player_y, PLAYER_GROUP, (iframe_cd / 8) % 2 == 1);
-		if (boss.total_health > 0)
-			boss.Draw(sc);
 		for (const Bullet& player_bullet : player_bullets) {
 			sc.DrawTile(player_bullet.GetX(), player_bullet.GetY(), 0x13, 0x37);
 		}
 		for (const Bullet& boss_bullet : boss_bullets) {
 			sc.DrawTile(boss_bullet.GetX(), boss_bullet.GetY(), 0x04, 0x4f);
 		}
+		if (boss.total_health > 0)
+			boss.Draw(sc);
 		sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
 		sc.DrawText(" LIVES:  ", 3, HEIGHT - 1, 0xbf);
 		sc.DrawText(TextFormat("%d", player_lives), 10, HEIGHT - 1, 0x07);
@@ -564,6 +581,9 @@ int main()
  | __/ _ \\ '__| '__/ _ \\| '__| / __| '_ ` _ \\ \n\
  | ||  __/ |  | | | (_) | |  | \__ \ | | | | | |\n\
   \\__\\___|_|  |_|  \\___/|_|  |_|___/_| |_| |_|", 16, 16, 0xbf);
+
+			sc.DrawText("Arrow keys to move\n\nC to shoot\n\n\n\nPress C to start", 16, 32, 0xbf);
+
 			sc.DrawText("Made in raylib", 1, HEIGHT - 2, 0xbf);
 			if (IsKeyPressed(KEY_C)) {
 				current_scene = Scene::MAIN_GAME;
@@ -582,6 +602,11 @@ int main()
 		case Scene::GAME_OVER:
 			sc.ClearScreen();
 			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
+
+			sc.DrawText("Damn, you failed", 16, 16, 0xbf);
+
+			sc.DrawText("Press C to try again", 16, 32, 0xbf);
+
 			if (IsKeyPressed(KEY_C)) {
 				g = GameManager();
 				current_scene = Scene::MAIN_GAME;
@@ -590,7 +615,13 @@ int main()
 		case Scene::VICTORY:
 			sc.ClearScreen();
 			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
+
+			sc.DrawText("You have successfully terrorized the space", 16, 16, 0xbf);
+
+			sc.DrawText("Press C to try again", 16, 32, 0xbf);
+
 			if (IsKeyPressed(KEY_C)) {
+				g = GameManager();
 				current_scene = Scene::MAIN_GAME;
 			}
 			break;
