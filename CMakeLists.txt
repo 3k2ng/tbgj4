@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 add_subdirectory("libs/raylib")
 
-add_executable(${PROJECT_NAME} "src/main.cpp" "src/pallette.h")
+include_directories("fonts")
 
-configure_file("fonts/cp437_8x8.png" "fonts/cp437_8x8.png" COPYONLY)
+add_executable(${PROJECT_NAME} "src/main.cpp" "src/pallette.h")
 
 target_link_libraries(${PROJECT_NAME} "raylib")
 

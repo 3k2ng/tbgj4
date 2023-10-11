@@ -7,6 +7,7 @@
 #include <list>
 
 #include "pallette.h"
+#include "cp437_8x8.h"
 
 constexpr size_t WIDTH = 80;
 constexpr size_t HEIGHT = 60;
@@ -14,6 +15,14 @@ constexpr size_t TOTAL_TILES = WIDTH * HEIGHT;
 constexpr float FONT_SIZE = 8;
 
 constexpr int FRAME_PER_SECOND = 60;
+
+const Image CP437_8X8{
+	CP437_8X8_DATA,
+	CP437_8X8_WIDTH,
+	CP437_8X8_HEIGHT,
+	1,
+	CP437_8X8_FORMAT
+};
 
 enum class Scene
 {
@@ -151,7 +160,7 @@ struct Screen {
 
 	Screen(const char* title) {
 		InitWindow(WIDTH * FONT_SIZE, HEIGHT * FONT_SIZE, title);
-		cp437_8x8 = LoadTexture("fonts/cp437_8x8.png");
+		cp437_8x8 = LoadTextureFromImage(CP437_8X8);
 		ClearScreen();
 	}
 
@@ -167,7 +176,7 @@ struct Screen {
 		}
 	}
 
-	void DrawGroup(int x, int y, const Group& group, bool override_color = false, const unsigned char &color_to_override = 0xbf) {
+	void DrawGroup(int x, int y, const Group& group, bool override_color = false, const unsigned char& color_to_override = 0xbf) {
 		for (int i = 0; i < group.codepoints.size(); ++i) {
 			DrawTile(x + group.offset_x + i % group.width, y + group.offset_y + i / group.width, group.codepoints[i], override_color ? color_to_override : group.colors[i]);
 		}
@@ -570,7 +579,7 @@ int main()
 			sc.DrawBorder(0xc9, 0xbb, 0xc8, 0xbc, 0xcd, 0xba, 0x9f);
 			sc.DrawText("An entry for GDC 4th text-based game jam", 1, 1, 0xbf);
 			sc.DrawText(
-"  _____                            _   _\n\
+				"  _____                            _   _\n\
  |  __ \\                          | | (_)\n\
  | |  | | ___  _ __ ___   ___  ___| |_ _  ___\n\
  | |  | |/ _ \\| '_ ` _ \\ / _ \\/ __| __| |/ __|\n\
